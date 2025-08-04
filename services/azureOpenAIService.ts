@@ -4,14 +4,23 @@ import type { Source, GeminiResponse, ChatMessage, CommentaryPerspective } from 
 // Get environment variables with fallbacks
 const getEnvVar = (name: string, fallback: string = '') => {
     if (typeof process !== 'undefined' && process.env) {
-        return process.env[name] || fallback;
+        // Try the original name first, then the VITE_ prefixed version
+        const value = process.env[name] || process.env[`VITE_${name}`];
+        console.log(`Environment variable ${name}:`, value ? '✅ Set' : '❌ Missing');
+        return value || fallback;
     }
+    console.log(`Process environment not available for ${name}`);
     return fallback;
 };
 
-const endpoint = getEnvVar('AZURE_OPENAI_ENDPOINT', 'https://biblestudyopenai.openai.azure.com/');
+const endpoint = getEnvVar('AZURE_OPENAI_ENDPOINT', 'https://your-resource.openai.azure.com/');
 const deployment = getEnvVar('DEPLOYMENT_NAME', 'gpt-4o-mini');
 const apiKey = getEnvVar('AZURE_OPENAI_API_KEY');
+
+console.log('Azure OpenAI Configuration:');
+console.log('- Endpoint:', endpoint);
+console.log('- Deployment:', deployment);
+console.log('- API Key:', apiKey ? `✅ Set (${apiKey.substring(0, 8)}...)` : '❌ Missing');
 
 // Initialize OpenAI client lazily
 let openaiInstance: OpenAI | null = null;
