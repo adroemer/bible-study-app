@@ -62,12 +62,15 @@ module.exports = async function (context, req) {
 
         // ===================================================================
         // CRITICAL CORRECTION: Use the recommended client initialization for Azure
-        // This is the most likely fix for your 403 error.
+        // This ensures the OpenAI SDK uses Azure-specific configuration
         // ===================================================================
         const openai = new OpenAI({
-            azureEndpoint: endpoint,
-            azureApiKey: apiKey,
-            apiVersion: apiVersion,
+            apiKey: apiKey,
+            baseURL: `${endpoint}/openai/deployments/${deployment}`,
+            defaultQuery: { 'api-version': apiVersion },
+            defaultHeaders: {
+                'api-key': apiKey,
+            }
         });
 
         let systemPrompt;
@@ -99,7 +102,7 @@ module.exports = async function (context, req) {
         context.log(`Making OpenAI request with type: "${type}", temp: ${temperature}`);
 
         const completion = await openai.chat.completions.create({
-            model: deployment, // For Azure, the model is the deployment name
+            model: deployment, // Azure deployment name
             messages: [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: prompt }
