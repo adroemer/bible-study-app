@@ -47,7 +47,7 @@ const InsightPage: React.FC = () => {
           </h1>
         </div>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Explore biblical topics with insights from prominent Christian voices, grounded by Google Search.
+          Explore biblical topics with insights from prominent Christian voices, powered by Azure OpenAI.
         </p>
       </header>
 
