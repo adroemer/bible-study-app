@@ -91,6 +91,7 @@ export const BibleExplorer: React.FC = () => {
     const [chapterData, setChapterData] = useState<BibleChapter | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl' | '2xl'>('base');
 
     const [chapterAnalysis, setChapterAnalysis] = useState<{ type: 'summary' | 'commentary', text: string, perspective?: CommentaryPerspective } | null>(null);
     const [isChapterAnalysisLoading, setIsChapterAnalysisLoading] = useState(false);
@@ -207,6 +208,17 @@ export const BibleExplorer: React.FC = () => {
         return verse.text.replace(/\[\d+\]/g, '').trim();
     };
 
+    const getFontSizeClasses = (size: typeof fontSize) => {
+        const sizeMap = {
+            'sm': 'text-sm',
+            'base': 'text-base', 
+            'lg': 'text-lg',
+            'xl': 'text-xl',
+            '2xl': 'text-2xl'
+        };
+        return sizeMap[size];
+    };
+
 
     return (
         <div className="lg:grid lg:grid-cols-3 lg:gap-8">
@@ -254,24 +266,41 @@ export const BibleExplorer: React.FC = () => {
                             <header className="border-b border-slate-200 dark:border-slate-700 pb-4 mb-4">
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                                     <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{chapterData.reference}</h3>
-                                    <div className="sm:w-1/2 lg:w-1/3">
-                                         <label htmlFor="translation-select" className="sr-only">Translation</label>
-                                         <select 
-                                            id="translation-select"
-                                            value={translation}
-                                            onChange={handleTranslationChange}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-                                        >
-                                            <option value="web">World English Bible</option>
-                                            <option value="kjv">King James Version</option>
-                                            <option value="bbe">Bible in Basic English</option>
-                                            <option value="asv">American Standard Version</option>
-                                        </select>
+                                    <div className="flex flex-col sm:flex-row gap-3 sm:w-2/3 lg:w-1/2">
+                                        <div className="flex-1">
+                                            <label htmlFor="translation-select" className="sr-only">Translation</label>
+                                            <select 
+                                                id="translation-select"
+                                                value={translation}
+                                                onChange={handleTranslationChange}
+                                                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                                            >
+                                                <option value="web">World English Bible</option>
+                                                <option value="kjv">King James Version</option>
+                                                <option value="bbe">Bible in Basic English</option>
+                                                <option value="asv">American Standard Version</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label htmlFor="font-size-select" className="sr-only">Font Size</label>
+                                            <select 
+                                                id="font-size-select"
+                                                value={fontSize}
+                                                onChange={(e) => setFontSize(e.target.value as typeof fontSize)}
+                                                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                                            >
+                                                <option value="sm">Small</option>
+                                                <option value="base">Normal</option>
+                                                <option value="lg">Large</option>
+                                                <option value="xl">Extra Large</option>
+                                                <option value="2xl">2X Large</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Translation: {chapterData.translation_name}</p>
                             </header>
-                            <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 font-serif leading-relaxed" onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
+                            <div className={`prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 font-serif leading-relaxed ${getFontSizeClasses(fontSize)}`} onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
                                 {chapterData.verses.map(verse => (
                                     <span key={verse.verse} className="mr-1">
                                         <sup className="text-primary-600 dark:text-primary-400 font-sans font-bold text-xs mr-1">{verse.verse}</sup>
