@@ -1,16 +1,11 @@
 import OpenAI from 'openai';
 import type { Source, GeminiResponse, ChatMessage, CommentaryPerspective } from '../types';
 
-// Get environment variables with fallbacks
-const getEnvVar = (name: string, fallback: string = '') => {
-    if (typeof process !== 'undefined' && process.env) {
-        // Try the original name first, then the VITE_ prefixed version
-        const value = process.env[name] || process.env[`VITE_${name}`];
-        console.log(`Environment variable ${name}:`, value ? '✅ Set' : '❌ Missing');
-        return value || fallback;
-    }
-    console.log(`Process environment not available for ${name}`);
-    return fallback;
+// Get environment variables using Vite's import.meta.env
+const getEnvVar = (key: string, fallback: string = ''): string => {
+    const value = import.meta.env[`VITE_${key}`] || fallback;
+    console.log(`Environment variable ${key}:`, value && value !== fallback ? '✅ Set' : '❌ Missing');
+    return value;
 };
 
 const endpoint = getEnvVar('AZURE_OPENAI_ENDPOINT', 'https://your-resource.openai.azure.com/');
