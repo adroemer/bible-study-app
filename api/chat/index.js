@@ -1,38 +1,39 @@
 const { OpenAI } = require('openai');
 
 module.exports = async function (context, req) {
+    // Initialize the response object at the beginning
+    context.res = {
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+    };
+
     try {
         context.log('Azure Function triggered:', req.method, req.url);
-        context.log('Request body:', JSON.stringify(req.body));
-        
-        // Set CORS headers
-        context.res = {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            }
-        };
 
-        // Handle preflight OPTIONS request
+        // Handle preflight OPTIONS request for CORS
         if (req.method === 'OPTIONS') {
-            context.res.status = 200;
+            context.res.status = 204; // 204 No Content is standard for preflight
             return;
         }
 
+        // Only allow POST requests
         if (req.method !== 'POST') {
-            context.res = {
-                ...context.res,
-                status: 405,
-                body: { error: 'Method not allowed' }
-            };
+            context.res.status = 405;
+            context.res.body = { success: false, error: 'Method Not Allowed' };
             return;
         }
+        
+        context.log('Request body:', JSON.stringify(req.body));
 
-        // Get environment variables (server-side only)
+        // Get environment variables from Function App Configuration
         const apiKey = process.env.AZURE_OPENAI_API_KEY;
         const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
         const deployment = process.env.DEPLOYMENT_NAME || 'gpt-4o-mini';
+        // BEST PRACTICE: Make the API version configurable as well
+        const apiVersion = process.env.AZURE_OPENAI_API_VERSION || '2025-01-01-preview';
 
         context.log('Environment check:', {
             hasApiKey: !!apiKey,
@@ -40,19 +41,13 @@ module.exports = async function (context, req) {
             deployment: deployment
         });
 
+        // Check for missing configuration
         if (!apiKey || !endpoint) {
-            context.res = {
-                ...context.res,
-                status: 500,
-                body: { 
-                    success: false,
-                    error: 'Azure OpenAI configuration missing',
-                    config: {
-                        hasApiKey: !!apiKey,
-                        hasEndpoint: !!endpoint,
-                        deployment: deployment
-                    }
-                }
+            context.log.error('Azure OpenAI configuration is missing from environment variables.');
+            context.res.status = 500;
+            context.res.body = {  
+                success: false,
+                error: 'Server configuration error: Azure OpenAI credentials are not set.',
             };
             return;
         }
@@ -60,22 +55,19 @@ module.exports = async function (context, req) {
         const { prompt, type, maxTokens = 2000 } = req.body;
 
         if (!prompt || !type) {
-            context.res = {
-                ...context.res,
-                status: 400,
-                body: { error: 'Missing prompt or type parameter' }
-            };
+            context.res.status = 400;
+            context.res.body = { success: false, error: 'Missing "prompt" or "type" in request body.' };
             return;
         }
 
-        // Initialize OpenAI client (server-side, no dangerouslyAllowBrowser needed)
+        // ===================================================================
+        // CRITICAL CORRECTION: Use the recommended client initialization for Azure
+        // This is the most likely fix for your 403 error.
+        // ===================================================================
         const openai = new OpenAI({
-            apiKey: apiKey,
-            baseURL: `${endpoint}openai/deployments/${deployment}`,
-            defaultQuery: { 'api-version': '2025-01-01-preview' },
-            defaultHeaders: {
-                'api-key': apiKey,
-            },
+            azureEndpoint: endpoint,
+            azureApiKey: apiKey,
+            apiVersion: apiVersion,
         });
 
         let systemPrompt;
@@ -98,27 +90,19 @@ module.exports = async function (context, req) {
                 systemPrompt = 'You are a helpful and knowledgeable Bible assistant. Be helpful and informative.';
                 break;
             default:
-                context.res = {
-                    ...context.res,
-                    status: 400,
-                    body: { error: 'Invalid type parameter' }
-                };
+                context.res.status = 400;
+                context.res.body = { success: false, error: 'Invalid "type" parameter.' };
                 return;
         }
-
-        context.log('Making OpenAI request...');
+        
+        // ENHANCED LOGGING: Log the parameters being sent to OpenAI
+        context.log(`Making OpenAI request with type: "${type}", temp: ${temperature}`);
 
         const completion = await openai.chat.completions.create({
-            model: deployment,
+            model: deployment, // For Azure, the model is the deployment name
             messages: [
-                {
-                    role: 'system',
-                    content: systemPrompt
-                },
-                {
-                    role: 'user',
-                    content: prompt
-                }
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: prompt }
             ],
             max_tokens: maxTokens,
             temperature: temperature,
@@ -131,14 +115,11 @@ module.exports = async function (context, req) {
 
         const responseText = completion.choices[0]?.message?.content || "No response generated.";
 
-        context.res = {
-            ...context.res,
-            status: 200,
-            body: {
-                success: true,
-                response: responseText,
-                usage: completion.usage
-            }
+        context.res.status = 200;
+        context.res.body = {
+            success: true,
+            response: responseText,
+            usage: completion.usage
         };
 
     } catch (error) {
@@ -146,38 +127,28 @@ module.exports = async function (context, req) {
         
         let errorMessage = 'An error occurred while processing your request.';
         let statusCode = 500;
-
-        if (error.code === 'insufficient_quota') {
-            errorMessage = 'Azure OpenAI quota exceeded. Please check your usage limits.';
-        } else if (error.status === 403) {
-            errorMessage = 'Access denied. This could be due to: 1) Network/Firewall restrictions on your Azure OpenAI service, 2) API key permissions, or 3) Incorrect endpoint/deployment configuration.';
+        
+        // This detailed error handling will now send a much more useful response to your front-end
+        if (error.status === 403) {
+            errorMessage = 'Access Denied. This could be a Firewall or IAM Role issue on your Azure OpenAI resource. Check your Azure Function and Azure OpenAI networking and access control settings.';
             statusCode = 403;
         } else if (error.status === 401) {
-            errorMessage = 'Authentication failed. Please check your API key configuration.';
+            errorMessage = 'Authentication Failed. The API Key is likely invalid or expired.';
             statusCode = 401;
         } else if (error.status === 404) {
-            errorMessage = 'Resource not found. Please check your endpoint URL and deployment name.';
+            errorMessage = 'Resource Not Found. Check if the Azure OpenAI endpoint or deployment name is correct.';
             statusCode = 404;
+        } else if (error.code === 'insufficient_quota') {
+            errorMessage = 'Azure OpenAI quota exceeded. Please check your usage limits.';
+            statusCode = 429; // 429 is more appropriate for rate limits/quota
         }
 
-        context.res = {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
-            status: statusCode,
-            body: {
-                success: false,
-                error: errorMessage,
-                details: error.message,
-                statusCode: error.status,
-                config: {
-                    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-                    deployment: process.env.DEPLOYMENT_NAME || 'gpt-4o-mini',
-                    hasApiKey: !!process.env.AZURE_OPENAI_API_KEY
-                }
-            }
+        context.res.status = statusCode;
+        context.res.body = {
+            success: false,
+            error: errorMessage,
+            details: error.message, // The raw error from the SDK
+            statusCode: error.status
         };
     }
 };
