@@ -1,5 +1,6 @@
 
 import type { BibleChapter } from '../types';
+import { fetchOfflineChapter, isTranslationAvailableOffline } from './offlineBibleService';
 
 const API_BASE_URL = 'https://bible-api.com';
 
@@ -90,7 +91,24 @@ export const fetchChapter = async (book: string, chapter: number, translation: s
         return localStorageData;
     }
     
-    // Fetch from API if not in cache
+    // Try offline Bible data first (if available for this translation)
+    if (isTranslationAvailableOffline(translation)) {
+        try {
+            console.log(`Loading Bible chapter from offline data: ${book} ${chapter} (${translation})`);
+            const offlineData = await fetchOfflineChapter(book, chapter, translation);
+            
+            // Cache the offline result
+            manageMemoryCacheSize();
+            memoryCache.set(cacheKey, { data: offlineData, timestamp: Date.now() });
+            saveToLocalStorage(cacheKey, offlineData);
+            
+            return offlineData;
+        } catch (offlineError) {
+            console.warn(`Failed to load from offline data, falling back to API:`, offlineError);
+        }
+    }
+    
+    // Fetch from API as final fallback
     console.log(`Fetching Bible chapter from API: ${book} ${chapter}`);
     const url = `${API_BASE_URL}/${encodeURIComponent(book)}+${chapter}?translation=${encodeURIComponent(translation)}`;
     
