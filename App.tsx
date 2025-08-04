@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { fetchGroundedResponse } from './services/azureOpenAIService';
+import { fetchGroundedResponse } from './services/secureApiService';
 import type { GeminiResponse } from './types';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ResponseDisplay } from './components/ResponseDisplay';

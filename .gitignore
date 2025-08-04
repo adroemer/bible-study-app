@@ -25,3 +25,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Deprecated insecure service (DO NOT USE)
+services/azureOpenAIService.ts

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useCallback, useRef } from 'react';
 import type { BibleBook, BibleChapter, CommentaryPerspective, BibleTranslation, BibleVerse } from '../types';
 import { chronologicalBooks, alphabeticalBooks } from '../util/bibleBooks';
 import { fetchChapter } from '../services/bibleService';
-import { summarizeChapter, generateChapterCommentary, createScriptureChat, generateSelectionCommentary } from '../services/azureOpenAIService';
+import { summarizeChapter, generateChapterCommentary, createScriptureChat, generateSelectionCommentary } from '../services/secureApiService';
 import { ErrorAlert } from './ErrorAlert';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ArrowsRightLeftIcon, BookOpenIcon, ChatBubbleLeftRightIcon } from './Icons';
