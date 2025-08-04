@@ -8,6 +8,7 @@ import { ErrorAlert } from './components/ErrorAlert';
 import { BookOpenIcon, SparklesIcon } from './components/Icons';
 import { BibleExplorer } from './components/BibleExplorer';
 import { Navbar, type Page } from './components/Navbar';
+import { Login } from './components/Login';
 
 const InsightPage: React.FC = () => {
   const [query, setQuery] = useState<string>('');
@@ -89,13 +90,26 @@ const InsightPage: React.FC = () => {
 
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>('insight');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 bg-slate-100 dark:bg-slate-900 font-sans">
       <div className="w-full max-w-7xl mx-auto">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="p-8 md:p-12">
-            <Navbar page={page} setPage={setPage} />
+            <Navbar page={page} setPage={setPage} onLogout={handleLogout} />
             <div className="mt-8">
               {page === 'insight' && <InsightPage />}
               {page === 'explorer' && <BibleExplorer />}
