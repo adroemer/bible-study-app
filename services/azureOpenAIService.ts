@@ -3,8 +3,11 @@ import type { Source, GeminiResponse, ChatMessage, CommentaryPerspective } from 
 
 // Get environment variables using Vite's import.meta.env
 const getEnvVar = (key: string, fallback: string = ''): string => {
-    const value = import.meta.env[`VITE_${key}`] || fallback;
+    const viteKey = `VITE_${key}`;
+    const value = import.meta.env[viteKey] || fallback;
     console.log(`Environment variable ${key}:`, value && value !== fallback ? '✅ Set' : '❌ Missing');
+    console.log(`  - Looking for: ${viteKey}`);
+    console.log(`  - Available env vars:`, Object.keys(import.meta.env).filter(k => k.includes('AZURE') || k.includes('DEPLOYMENT')));
     return value;
 };
 
@@ -33,6 +36,7 @@ const getOpenAIClient = (): OpenAI => {
             defaultHeaders: {
                 'api-key': apiKey,
             },
+            dangerouslyAllowBrowser: true, // Required for browser usage
         });
     }
     
