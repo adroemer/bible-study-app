@@ -61,16 +61,13 @@ module.exports = async function (context, req) {
         }
 
         // ===================================================================
-        // CRITICAL CORRECTION: Use the recommended client initialization for Azure
-        // This ensures the OpenAI SDK uses Azure-specific configuration
+        // Azure OpenAI client configuration
+        // Using the official Azure pattern from OpenAI SDK documentation
         // ===================================================================
         const openai = new OpenAI({
             apiKey: apiKey,
-            baseURL: `${endpoint}/openai/deployments/${deployment}`,
+            baseURL: `${endpoint.replace(/\/$/, '')}/openai/deployments/${deployment}`,
             defaultQuery: { 'api-version': apiVersion },
-            defaultHeaders: {
-                'api-key': apiKey,
-            }
         });
 
         let systemPrompt;
