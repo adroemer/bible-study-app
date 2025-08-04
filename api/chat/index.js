@@ -1,43 +1,58 @@
-const OpenAI = require('openai').default;
+const { OpenAI } = require('openai');
 
 module.exports = async function (context, req) {
-    context.log('Azure Function triggered:', req.method, req.url);
-    
-    // Set CORS headers
-    context.res = {
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        }
-    };
-
-    // Handle preflight OPTIONS request
-    if (req.method === 'OPTIONS') {
-        context.res.status = 200;
-        return;
-    }
-
-    if (req.method !== 'POST') {
-        context.res = {
-            ...context.res,
-            status: 405,
-            body: { error: 'Method not allowed' }
-        };
-        return;
-    }
-
     try {
+        context.log('Azure Function triggered:', req.method, req.url);
+        context.log('Request body:', JSON.stringify(req.body));
+        
+        // Set CORS headers
+        context.res = {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            }
+        };
+
+        // Handle preflight OPTIONS request
+        if (req.method === 'OPTIONS') {
+            context.res.status = 200;
+            return;
+        }
+
+        if (req.method !== 'POST') {
+            context.res = {
+                ...context.res,
+                status: 405,
+                body: { error: 'Method not allowed' }
+            };
+            return;
+        }
+
         // Get environment variables (server-side only)
         const apiKey = process.env.AZURE_OPENAI_API_KEY;
         const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
         const deployment = process.env.DEPLOYMENT_NAME || 'gpt-4o-mini';
 
+        context.log('Environment check:', {
+            hasApiKey: !!apiKey,
+            hasEndpoint: !!endpoint,
+            deployment: deployment
+        });
+
         if (!apiKey || !endpoint) {
             context.res = {
                 ...context.res,
                 status: 500,
-                body: { error: 'Azure OpenAI configuration missing' }
+                body: { 
+                    success: false,
+                    error: 'Azure OpenAI configuration missing',
+                    config: {
+                        hasApiKey: !!apiKey,
+                        hasEndpoint: !!endpoint,
+                        deployment: deployment
+                    }
+                }
             };
             return;
         }
@@ -90,6 +105,8 @@ module.exports = async function (context, req) {
                 };
                 return;
         }
+
+        context.log('Making OpenAI request...');
 
         const completion = await openai.chat.completions.create({
             model: deployment,
@@ -144,7 +161,11 @@ module.exports = async function (context, req) {
         }
 
         context.res = {
-            ...context.res,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            },
             status: statusCode,
             body: {
                 success: false,
@@ -152,9 +173,9 @@ module.exports = async function (context, req) {
                 details: error.message,
                 statusCode: error.status,
                 config: {
-                    endpoint: endpoint,
-                    deployment: deployment,
-                    hasApiKey: !!apiKey
+                    endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+                    deployment: process.env.DEPLOYMENT_NAME || 'gpt-4o-mini',
+                    hasApiKey: !!process.env.AZURE_OPENAI_API_KEY
                 }
             }
         };
