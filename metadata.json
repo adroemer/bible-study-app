@@ -1,0 +1,6 @@
+{
+  "name": "Bible Study",
+  "description": "An application to explore biblical topics and theological questions. Features include AI-powered insights grounded by Google Search and a full Bible Explorer with chapter summaries, commentary from various theological perspectives (e.g., Catholic, Enduring Word), and an interactive chat for deeper study.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
