@@ -1,6 +1,8 @@
-const { OpenAI } = require('openai');
+const OpenAI = require('openai').default;
 
 module.exports = async function (context, req) {
+    context.log('Azure Function triggered:', req.method, req.url);
+    
     // Set CORS headers
     context.res = {
         headers: {
