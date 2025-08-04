@@ -11,6 +11,10 @@
   },
   "routes": [
     {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
@@ -21,5 +25,8 @@
   },
   "mimeTypes": {
     ".json": "application/json"
+  },
+  "platform": {
+    "apiRuntime": "node:18"
   }
 }

@@ -133,11 +133,14 @@ module.exports = async function (context, req) {
         if (error.code === 'insufficient_quota') {
             errorMessage = 'Azure OpenAI quota exceeded. Please check your usage limits.';
         } else if (error.status === 403) {
-            errorMessage = 'Access denied. Please check your Azure OpenAI service configuration and network settings.';
+            errorMessage = 'Access denied. This could be due to: 1) Network/Firewall restrictions on your Azure OpenAI service, 2) API key permissions, or 3) Incorrect endpoint/deployment configuration.';
             statusCode = 403;
         } else if (error.status === 401) {
             errorMessage = 'Authentication failed. Please check your API key configuration.';
             statusCode = 401;
+        } else if (error.status === 404) {
+            errorMessage = 'Resource not found. Please check your endpoint URL and deployment name.';
+            statusCode = 404;
         }
 
         context.res = {
@@ -146,7 +149,13 @@ module.exports = async function (context, req) {
             body: {
                 success: false,
                 error: errorMessage,
-                details: error.message
+                details: error.message,
+                statusCode: error.status,
+                config: {
+                    endpoint: endpoint,
+                    deployment: deployment,
+                    hasApiKey: !!apiKey
+                }
             }
         };
     }
