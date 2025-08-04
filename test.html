@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bible Study App Test</title>
+</head>
+<body>
+    <iframe src="https://kind-mud-094d4dc0f.2.azurestaticapps.net" width="100%" height="600px"></iframe>
+    <script>
+        setTimeout(() => {
+            console.log('Testing app loading...');
+            fetch('https://kind-mud-094d4dc0f.2.azurestaticapps.net')
+                .then(response => response.text())
+                .then(html => {
+                    if (html.includes('Theologian\'s Insight')) {
+                        console.log('✅ App HTML loaded successfully');
+                    } else {
+                        console.log('❌ App HTML missing expected content');
+                    }
+                });
+        }, 2000);
+    </script>
+</body>
+</html>
