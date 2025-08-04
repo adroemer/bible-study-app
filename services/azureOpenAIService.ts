@@ -1,25 +1,39 @@
 import OpenAI from 'openai';
 import type { Source, GeminiResponse, ChatMessage, CommentaryPerspective } from '../types';
 
-if (!process.env.AZURE_OPENAI_ENDPOINT) {
-    throw new Error("AZURE_OPENAI_ENDPOINT environment variable not set");
-}
+// Get environment variables with fallbacks
+const getEnvVar = (name: string, fallback: string = '') => {
+    if (typeof process !== 'undefined' && process.env) {
+        return process.env[name] || fallback;
+    }
+    return fallback;
+};
 
-if (!process.env.AZURE_OPENAI_API_KEY) {
-    throw new Error("AZURE_OPENAI_API_KEY environment variable not set");
-}
+const endpoint = getEnvVar('AZURE_OPENAI_ENDPOINT', 'https://biblestudyopenai.openai.azure.com/');
+const deployment = getEnvVar('DEPLOYMENT_NAME', 'gpt-4o-mini');
+const apiKey = getEnvVar('AZURE_OPENAI_API_KEY');
 
-const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://biblestudyopenai.openai.azure.com/";
-const deployment = process.env.DEPLOYMENT_NAME || "gpt-4o-mini";
+// Initialize OpenAI client lazily
+let openaiInstance: OpenAI | null = null;
 
-const openai = new OpenAI({
-    apiKey: process.env.AZURE_OPENAI_API_KEY,
-    baseURL: `${endpoint}openai/deployments/${deployment}`,
-    defaultQuery: { 'api-version': '2025-01-01-preview' },
-    defaultHeaders: {
-        'api-key': process.env.AZURE_OPENAI_API_KEY,
-    },
-});
+const getOpenAIClient = (): OpenAI => {
+    if (!apiKey) {
+        throw new Error("Azure OpenAI API key is not configured. Please check your environment variables.");
+    }
+    
+    if (!openaiInstance) {
+        openaiInstance = new OpenAI({
+            apiKey: apiKey,
+            baseURL: `${endpoint}openai/deployments/${deployment}`,
+            defaultQuery: { 'api-version': '2025-01-01-preview' },
+            defaultHeaders: {
+                'api-key': apiKey,
+            },
+        });
+    }
+    
+    return openaiInstance;
+};
 
 export const fetchGroundedResponse = async (userQuery: string): Promise<GeminiResponse> => {
     const fullPrompt = `Considering the perspectives of prominent Christian theologians and voices from the 19th, 20th, and 21st centuries (such as C.S. Lewis, Karl Barth, Dietrich Bonhoeffer, Tim Keller, John Stott, etc.), please provide a comprehensive and well-reasoned response to the following topic. 
@@ -29,6 +43,7 @@ When possible, cite specific sources or references to support your points. Topic
 Please format your response in a clear, structured manner with theological insights and practical applications.`;
 
     try {
+        const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
             model: deployment,
             messages: [
@@ -82,6 +97,7 @@ export const summarizeChapter = async (chapterText: string, reference: string): 
     const prompt = `Please provide a concise summary of the following biblical passage: ${reference}. Do not add any conversational fluff before or after the summary. Just provide the summary.\n\n${chapterText}`;
     
     try {
+        const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
             model: deployment,
             messages: [
@@ -121,6 +137,7 @@ export const generateChapterCommentary = async (chapterText: string, reference: 
     const fullPrompt = `${basePrompt}\n\nHere is the full chapter of ${reference} for context:\n\n${chapterText}`;
     
     try {
+        const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
             model: deployment,
             messages: [
@@ -154,6 +171,7 @@ export const generateSelectionCommentary = async (selection: string, reference: 
     const fullPrompt = `${basePrompt}\n\nHere is the selected text from ${reference}:\n\n"${selection}"`;
     
     try {
+        const openai = getOpenAIClient();
         const completion = await openai.chat.completions.create({
             model: deployment,
             messages: [
@@ -187,7 +205,8 @@ export const createScriptureChat = (reference: string, chapterText: string) => {
     return {
         async sendMessage(message: string): Promise<string> {
             try {
-                const completion = await openai.chat.completions.create({
+                const openai = getOpenAIClient();
+        const completion = await openai.chat.completions.create({
                     model: deployment,
                     messages: [
                         {

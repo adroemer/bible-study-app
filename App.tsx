@@ -1,30 +1,107 @@
-import React from 'react';
+
+import React, { useState, useCallback } from 'react';
+import { fetchGroundedResponse } from './services/azureOpenAIService';
+import type { GeminiResponse } from './types';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { ResponseDisplay } from './components/ResponseDisplay';
+import { ErrorAlert } from './components/ErrorAlert';
+import { BookOpenIcon, SparklesIcon } from './components/Icons';
+import { BibleExplorer } from './components/BibleExplorer';
+import { Navbar, type Page } from './components/Navbar';
+
+const InsightPage: React.FC = () => {
+  const [query, setQuery] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [response, setResponse] = useState<GeminiResponse | null>(null);
+
+  const handleSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!query.trim()) {
+      setError("Please enter a topic or question.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setResponse(null);
+
+    try {
+      const result = await fetchGroundedResponse(query);
+      setResponse(result);
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred. Please check the console.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [query]);
+
+  return (
+    <>
+      <header className="text-center mb-8">
+        <div className="inline-flex items-center gap-3 mb-2">
+          <SparklesIcon className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+            Theologian's Insight
+          </h1>
+        </div>
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          Explore biblical topics with insights from prominent Christian voices, powered by Azure OpenAI.
+        </p>
+      </header>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <textarea
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="e.g., Explain the concept of grace..."
+          className="w-full h-32 p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-shadow duration-200 resize-none"
+          disabled={isLoading}
+          aria-label="Topic or question input"
+        />
+        <button
+          type="submit"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors duration-200"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <LoadingSpinner />
+              Thinking...
+            </>
+          ) : (
+            <>
+              <SparklesIcon className="h-5 w-5" />
+              Seek Insight
+            </>
+          )}
+        </button>
+      </form>
+      <div className="mt-8">
+        {error && <ErrorAlert message={error} />}
+        {response && <ResponseDisplay response={response} />}
+      </div>
+    </>
+  );
+}
+
 
 const App: React.FC = () => {
-  console.log('App component rendering...');
-  
+  const [page, setPage] = useState<Page>('insight');
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      fontFamily: 'Arial, sans-serif',
-      backgroundColor: '#f0f0f0'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        textAlign: 'center'
-      }}>
-        <h1 style={{ color: '#333', marginBottom: '1rem' }}>
-          Bible Study App
-        </h1>
-        <p style={{ color: '#666' }}>
-          ✅ React is loading successfully!
-        </p>
+    <div className="min-h-screen flex flex-col items-center p-4 bg-slate-100 dark:bg-slate-900 font-sans">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="p-8 md:p-12">
+            <Navbar page={page} setPage={setPage} />
+            <div className="mt-8">
+              {page === 'insight' && <InsightPage />}
+              {page === 'explorer' && <BibleExplorer />}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
