@@ -8,6 +8,7 @@ import { ErrorAlert } from './ErrorAlert';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ArrowsRightLeftIcon, BookOpenIcon, ChatBubbleLeftRightIcon } from './Icons';
 import { ChatInterface } from './ChatInterface';
+import { MemoryService, type BibleMemoryState } from '../services/memoryService';
 
 type SortOrder = 'chrono' | 'alpha';
 
@@ -109,20 +110,51 @@ const commentaryPerspectiveLabels: Record<CommentaryPerspective, string> = {
 
 
 export const BibleExplorer: React.FC = () => {
+    // Initialize state from memory
+    const memoryState = useMemo(() => MemoryService.loadBibleState(), []);
+    
     const [sortOrder, setSortOrder] = useState<SortOrder>('chrono');
-    const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
-    const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-    const [translation, setTranslation] = useState<BibleTranslation>('web');
+    const [selectedBook, setSelectedBook] = useState<BibleBook | null>(() => {
+        if (memoryState.lastBook) {
+            const books = [...chronologicalBooks, ...alphabeticalBooks];
+            return books.find(book => book.name === memoryState.lastBook) || null;
+        }
+        return null;
+    });
+    const [selectedChapter, setSelectedChapter] = useState<number | null>(memoryState.lastChapter || null);
+    const [translation, setTranslation] = useState<BibleTranslation>(memoryState.lastTranslation as BibleTranslation || 'web');
     const [chapterData, setChapterData] = useState<BibleChapter | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl' | '2xl'>('base');
 
-    const [chapterAnalysis, setChapterAnalysis] = useState<{ type: 'summary' | 'commentary', text: string, perspective?: CommentaryPerspective } | null>(null);
+    const [chapterAnalysis, setChapterAnalysis] = useState<{ type: 'summary' | 'commentary', text: string, perspective?: CommentaryPerspective } | null>(() => {
+        if (memoryState.chapterAnalysis && 
+            memoryState.chapterAnalysis.bookName === memoryState.lastBook && 
+            memoryState.chapterAnalysis.chapter === memoryState.lastChapter &&
+            memoryState.chapterAnalysis.translation === memoryState.lastTranslation) {
+            return {
+                type: memoryState.chapterAnalysis.type,
+                text: memoryState.chapterAnalysis.text,
+                perspective: memoryState.chapterAnalysis.perspective as CommentaryPerspective
+            };
+        }
+        return null;
+    });
     const [isChapterAnalysisLoading, setIsChapterAnalysisLoading] = useState(false);
     
     const [selectedText, setSelectedText] = useState<string | null>(null);
-    const [selectionAnalysis, setSelectionAnalysis] = useState<{ text: string, perspective: CommentaryPerspective } | null>(null);
+    const [selectionAnalysis, setSelectionAnalysis] = useState<{ text: string, perspective: CommentaryPerspective } | null>(() => {
+        if (memoryState.selectionAnalysis &&
+            memoryState.selectionAnalysis.bookName === memoryState.lastBook &&
+            memoryState.selectionAnalysis.chapter === memoryState.lastChapter) {
+            return {
+                text: memoryState.selectionAnalysis.text,
+                perspective: memoryState.selectionAnalysis.perspective as CommentaryPerspective
+            };
+        }
+        return null;
+    });
     const [isSelectionAnalysisLoading, setIsSelectionAnalysisLoading] = useState(false);
 
     const [chatInstance, setChatInstance] = useState<{ sendMessage: (message: string) => Promise<string> } |
@@ -131,6 +163,26 @@ export const BibleExplorer: React.FC = () => {
     const mainContentRef = useRef<HTMLDivElement>(null);
 
     const books = useMemo(() => (sortOrder === 'chrono' ? chronologicalBooks : alphabeticalBooks), [sortOrder]);
+
+    // Restore chapter data on component mount if we have memory state
+    useEffect(() => {
+        if (selectedBook && selectedChapter && !chapterData) {
+            handleSelectChapter(selectedChapter, translation);
+        }
+    }, []); // Run only once on mount
+
+    // Save memory state when key values change
+    useEffect(() => {
+        if (selectedBook && selectedChapter) {
+            const currentState = MemoryService.loadBibleState();
+            MemoryService.saveBibleState({
+                ...currentState,
+                lastBook: selectedBook.name,
+                lastChapter: selectedChapter,
+                lastTranslation: translation
+            });
+        }
+    }, [selectedBook, selectedChapter, translation]);
 
     const handleSelectBook = (book: BibleBook) => {
         setSelectedBook(book);
@@ -174,14 +226,27 @@ export const BibleExplorer: React.FC = () => {
     };
 
     const handleSummarize = async () => {
-        if (!chapterData) return;
+        if (!chapterData || !selectedBook || !selectedChapter) return;
         setIsChapterAnalysisLoading(true);
         setChapterAnalysis(null);
         setChatInstance(null);
         try {
             const summary = await summarizeChapter(chapterData.text, chapterData.reference);
-            setChapterAnalysis({ type: 'summary', text: summary });
+            const analysisResult = { type: 'summary' as const, text: summary };
+            setChapterAnalysis(analysisResult);
             setChatInstance(createScriptureChat(chapterData.reference, chapterData.text));
+            
+            // Save to memory
+            const currentState = MemoryService.loadBibleState();
+            MemoryService.saveBibleState({
+                ...currentState,
+                chapterAnalysis: {
+                    ...analysisResult,
+                    bookName: selectedBook.name,
+                    chapter: selectedChapter,
+                    translation: translation
+                }
+            });
         } catch (err) {
             setError(err instanceof Error ? `Failed to get summary: ${err.message}`: 'Unknown error');
         } finally {
@@ -190,14 +255,27 @@ export const BibleExplorer: React.FC = () => {
     }
 
     const handleChapterCommentary = async (perspective: CommentaryPerspective) => {
-        if (!chapterData) return;
+        if (!chapterData || !selectedBook || !selectedChapter) return;
         setIsChapterAnalysisLoading(true);
         setChapterAnalysis(null);
         setChatInstance(null);
         try {
             const commentary = await generateChapterCommentary(chapterData.text, chapterData.reference, perspective);
-            setChapterAnalysis({ type: 'commentary', text: commentary, perspective });
+            const analysisResult = { type: 'commentary' as const, text: commentary, perspective };
+            setChapterAnalysis(analysisResult);
             setChatInstance(createScriptureChat(chapterData.reference, chapterData.text));
+            
+            // Save to memory
+            const currentState = MemoryService.loadBibleState();
+            MemoryService.saveBibleState({
+                ...currentState,
+                chapterAnalysis: {
+                    ...analysisResult,
+                    bookName: selectedBook.name,
+                    chapter: selectedChapter,
+                    translation: translation
+                }
+            });
         } catch (err) {
              setError(err instanceof Error ? `Failed to get commentary: ${err.message}`: 'Unknown error');
         } finally {
@@ -214,12 +292,25 @@ export const BibleExplorer: React.FC = () => {
     };
 
     const handleSelectionCommentary = async (perspective: CommentaryPerspective) => {
-        if (!selectedText || !chapterData) return;
+        if (!selectedText || !chapterData || !selectedBook || !selectedChapter) return;
         setIsSelectionAnalysisLoading(true);
         setSelectionAnalysis(null);
         try {
             const commentary = await generateSelectionCommentary(selectedText, chapterData.reference, perspective);
-            setSelectionAnalysis({ text: commentary, perspective });
+            const analysisResult = { text: commentary, perspective };
+            setSelectionAnalysis(analysisResult);
+            
+            // Save to memory
+            const currentState = MemoryService.loadBibleState();
+            MemoryService.saveBibleState({
+                ...currentState,
+                selectionAnalysis: {
+                    ...analysisResult,
+                    selectedText: selectedText,
+                    bookName: selectedBook.name,
+                    chapter: selectedChapter
+                }
+            });
         } catch (err) {
             // Display error in the selection box? For now, top-level.
             setError(err instanceof Error ? `Failed to get commentary for selection: ${err.message}` : 'Unknown error');

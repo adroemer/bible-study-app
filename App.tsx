@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { fetchGroundedResponse } from './services/secureApiService';
 import type { GeminiResponse } from './types';
 import { LoadingSpinner } from './components/LoadingSpinner';
@@ -9,12 +9,34 @@ import { BookOpenIcon, SparklesIcon } from './components/Icons';
 import { BibleExplorer } from './components/BibleExplorer';
 import { Navbar, type Page } from './components/Navbar';
 import { Login } from './components/Login';
+import { MemoryService, type StudyMemoryState } from './services/memoryService';
 
 const InsightPage: React.FC = () => {
-  const [query, setQuery] = useState<string>('');
+  // Initialize state from memory
+  const memoryState = useMemo(() => MemoryService.loadStudyState(), []);
+  
+  const [query, setQuery] = useState<string>(memoryState.lastQuery || '');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [response, setResponse] = useState<GeminiResponse | null>(null);
+  const [response, setResponse] = useState<GeminiResponse | null>(memoryState.lastResponse || null);
+
+  // Save query to memory when it changes
+  useEffect(() => {
+    if (query.trim()) {
+      const currentState = MemoryService.loadStudyState();
+      MemoryService.saveStudyState({
+        ...currentState,
+        lastQuery: query
+      });
+    }
+  }, [query]);
+
+  const handleReset = useCallback(() => {
+    setQuery('');
+    setError(null);
+    setResponse(null);
+    MemoryService.clearStudyState();
+  }, []);
 
   const handleSubmit = useCallback(async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,6 +52,18 @@ const InsightPage: React.FC = () => {
     try {
       const result = await fetchGroundedResponse(query);
       setResponse(result);
+      
+      // Save response to memory
+      const currentState = MemoryService.loadStudyState();
+      MemoryService.saveStudyState({
+        ...currentState,
+        lastQuery: query,
+        lastResponse: {
+          response: result.response,
+          sources: result.sources,
+          timestamp: new Date().toISOString()
+        }
+      });
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : "An unknown error occurred. Please check the console.");
@@ -41,11 +75,20 @@ const InsightPage: React.FC = () => {
   return (
     <>
       <header className="text-center mb-8">
-        <div className="inline-flex items-center gap-3 mb-2">
-          <SparklesIcon className="h-8 w-8 text-primary-600 dark:text-primary-400" />
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-            F3 Bible Study
-          </h1>
+        <div className="flex justify-between items-start mb-2">
+          <div></div> {/* Spacer for centering */}
+          <div className="inline-flex items-center gap-3">
+            <SparklesIcon className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+              F3 Bible Study
+            </h1>
+          </div>
+          <button
+            onClick={handleReset}
+            className="text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors px-3 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700"
+          >
+            Reset
+          </button>
         </div>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           Explore biblical topics with insights from prominent Christian voices, powered by Azure OpenAI.
