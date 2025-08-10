@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { BibleBook, BibleChapter, CommentaryPerspective, BibleTranslation, BibleVerse } from '../types';
 import { chronologicalBooks, alphabeticalBooks } from '../util/bibleBooks';
 import { fetchChapter } from '../services/bibleService';
@@ -46,6 +46,22 @@ const ChapterGrid: React.FC<{
     bookName: string;
     onSelectChapter: (chapter: number) => void;
 }> = ({ bookName, onSelectChapter }) => {
+    const [columns, setColumns] = useState(5);
+
+    useEffect(() => {
+        const updateColumns = () => {
+            const width = window.innerWidth;
+            if (width >= 1024) setColumns(12);
+            else if (width >= 768) setColumns(10);
+            else if (width >= 640) setColumns(8);
+            else setColumns(5);
+        };
+
+        updateColumns();
+        window.addEventListener('resize', updateColumns);
+        return () => window.removeEventListener('resize', updateColumns);
+    }, []);
+
     const chapterCounts: { [key: string]: number } = {
         "Genesis": 50, "Exodus": 40, "Leviticus": 27, "Numbers": 36, "Deuteronomy": 34,
         "Joshua": 24, "Judges": 21, "Ruth": 4, "1 Samuel": 31, "2 Samuel": 24,
@@ -66,9 +82,18 @@ const ChapterGrid: React.FC<{
     const count = chapterCounts[bookName] || 0;
 
     return (
-        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
+        <div 
+            className="grid gap-2 w-full"
+            style={{
+                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`
+            }}
+        >
             {Array.from({ length: count }, (_, i) => i + 1).map(chapter => (
-                <button key={chapter} onClick={() => onSelectChapter(chapter)} className="aspect-square flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors text-sm">
+                <button 
+                    key={chapter} 
+                    onClick={() => onSelectChapter(chapter)} 
+                    className="w-full h-10 flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors text-sm font-medium border border-slate-200 dark:border-slate-600"
+                >
                     {chapter}
                 </button>
             ))}
