@@ -32,17 +32,17 @@ export const Navbar: React.FC<NavbarProps> = ({ page, setPage, onLogout }) => {
         <nav className="border-b border-slate-200 dark:border-slate-700 pb-6 mb-6">
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 md:space-x-4 mx-auto">
-                     <NavButton
-                        isActive={page === 'insight'}
-                        onClick={() => setPage('insight')}
-                        icon={<SparklesIcon className="h-5 w-5" />}
-                        label="Theologian's Insight"
-                    />
                     <NavButton
                         isActive={page === 'explorer'}
                         onClick={() => setPage('explorer')}
                         icon={<BookOpenIcon className="h-5 w-5" />}
                         label="Bible Explorer"
+                    />
+                     <NavButton
+                        isActive={page === 'insight'}
+                        onClick={() => setPage('insight')}
+                        icon={<SparklesIcon className="h-5 w-5" />}
+                        label="F3 Bible Study"
                     />
                 </div>
                 {onLogout && (

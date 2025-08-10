@@ -44,7 +44,7 @@ const InsightPage: React.FC = () => {
         <div className="inline-flex items-center gap-3 mb-2">
           <SparklesIcon className="h-8 w-8 text-primary-600 dark:text-primary-400" />
           <h1 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-            Theologian's Insight
+            F3 Bible Study
           </h1>
         </div>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
@@ -89,7 +89,7 @@ const InsightPage: React.FC = () => {
 
 
 const App: React.FC = () => {
-  const [page, setPage] = useState<Page>('insight');
+  const [page, setPage] = useState<Page>('explorer');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const handleLogin = () => {

@@ -66,9 +66,9 @@ const ChapterGrid: React.FC<{
     const count = chapterCounts[bookName] || 0;
 
     return (
-        <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 gap-2">
+        <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
             {Array.from({ length: count }, (_, i) => i + 1).map(chapter => (
-                <button key={chapter} onClick={() => onSelectChapter(chapter)} className="aspect-square flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors">
+                <button key={chapter} onClick={() => onSelectChapter(chapter)} className="aspect-square flex items-center justify-center rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors text-sm">
                     {chapter}
                 </button>
             ))}
