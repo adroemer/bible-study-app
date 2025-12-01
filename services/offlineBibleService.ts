@@ -97,7 +97,12 @@ const loadBibleData = async (translation: string): Promise<OfflineBibleBook[]> =
 
     try {
         // Map translation to filename
-        const filename = translation === 'kjv' ? 'kjv.json' : 'web.json';
+        let filename = 'web.json';
+        if (translation === 'kjv') {
+            filename = 'kjv.json';
+        } else if (translation === 'niv') {
+            filename = 'niv.json';
+        }
         const response = await fetch(`/data/bible/${filename}`);
         
         if (!response.ok) {
@@ -189,14 +194,14 @@ export const fetchOfflineChapter = async (book: string, chapter: number, transla
  * Check if translation is available offline
  */
 export const isTranslationAvailableOffline = (translation: string): boolean => {
-    return ['kjv', 'web'].includes(translation.toLowerCase());
+    return ['kjv', 'web', 'niv'].includes(translation.toLowerCase());
 };
 
 /**
  * Get list of available offline translations
  */
 export const getAvailableOfflineTranslations = (): string[] => {
-    return ['kjv', 'web'];
+    return ['kjv', 'web', 'niv'];
 };
 
 /**
