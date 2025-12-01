@@ -8,6 +8,7 @@ import { ErrorAlert } from './ErrorAlert';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ArrowsRightLeftIcon, BookOpenIcon, ChatBubbleLeftRightIcon } from './Icons';
 import { ChatInterface } from './ChatInterface';
+import { Contemporaries } from './Contemporaries';
 import { MemoryService, type BibleMemoryState } from '../services/memoryService';
 
 type SortOrder = 'chrono' | 'alpha';
@@ -159,6 +160,8 @@ export const BibleExplorer: React.FC = () => {
 
     const [chatInstance, setChatInstance] = useState<{ sendMessage: (message: string) => Promise<string> } |
     null>(null);
+
+    const [isContemporariesOpen, setIsContemporariesOpen] = useState(false);
 
     const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -337,23 +340,29 @@ export const BibleExplorer: React.FC = () => {
 
 
     return (
-        <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-            <aside className="lg:col-span-1 mb-8 lg:mb-0">
-                <div className="sticky top-8">
-                    <header className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Books</h2>
-                        <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
-                            <ArrowsRightLeftIcon className="h-4 w-4" />
-                            {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
-                        </button>
-                    </header>
-                    <div className="max-h-[75vh] overflow-y-auto p-1">
-                        <BookList books={books} selectedBook={selectedBook} onSelectBook={handleSelectBook} />
+        <>
+            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+                <aside className="lg:col-span-1 mb-8 lg:mb-0">
+                    <div className="sticky top-8">
+                        <header className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Books</h2>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
+                                    <ArrowsRightLeftIcon className="h-4 w-4" />
+                                    {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
+                                </button>
+                                <button onClick={() => setIsContemporariesOpen(true)} className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline whitespace-nowrap">
+                                    Contemporaries
+                                </button>
+                            </div>
+                        </header>
+                        <div className="max-h-[75vh] overflow-y-auto p-1">
+                            <BookList books={books} selectedBook={selectedBook} onSelectBook={handleSelectBook} />
+                        </div>
                     </div>
-                </div>
-            </aside>
+                </aside>
 
-            <main ref={mainContentRef} className="lg:col-span-2">
+                <main ref={mainContentRef} className="lg:col-span-2">
                 {error && <ErrorAlert message={error} />}
                 
                 {!selectedBook && (
@@ -385,7 +394,7 @@ export const BibleExplorer: React.FC = () => {
                                     <div className="flex flex-col sm:flex-row gap-3 sm:w-2/3 lg:w-1/2">
                                         <div className="flex-1">
                                             <label htmlFor="translation-select" className="sr-only">Translation</label>
-                                            <select 
+                                            <select
                                                 id="translation-select"
                                                 value={translation}
                                                 onChange={handleTranslationChange}
@@ -395,6 +404,7 @@ export const BibleExplorer: React.FC = () => {
                                                 <option value="kjv">King James Version</option>
                                                 <option value="bbe">Bible in Basic English</option>
                                                 <option value="asv">American Standard Version</option>
+                                                <option value="niv">New International Version</option>
                                             </select>
                                         </div>
                                         <div className="flex-1">
@@ -493,7 +503,9 @@ export const BibleExplorer: React.FC = () => {
                         </section>
                     </div>
                 )}
-            </main>
-        </div>
+                </main>
+            </div>
+            <Contemporaries isOpen={isContemporariesOpen} onClose={() => setIsContemporariesOpen(false)} />
+        </>
     );
 };

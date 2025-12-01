@@ -39,4 +39,4 @@ export interface ChatMessage {
 
 export type CommentaryPerspective = 'catholic' | 'enduring_word' | 'historical';
 
-export type BibleTranslation = 'web' | 'kjv' | 'bbe' | 'asv';
+export type BibleTranslation = 'web' | 'kjv' | 'bbe' | 'asv' | 'niv';
