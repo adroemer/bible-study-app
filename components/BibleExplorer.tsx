@@ -407,6 +407,8 @@ export const BibleExplorer: React.FC = () => {
                                                 <option value="bbe">Bible in Basic English</option>
                                                 <option value="asv">American Standard Version</option>
                                                 <option value="niv">New International Version</option>
+                                                <option value="nabre">New American Bible Revised Edition</option>
+                                                <option value="esv">English Standard Version</option>
                                             </select>
                                         </div>
                                         <div className="flex-1">

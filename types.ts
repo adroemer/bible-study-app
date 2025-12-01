@@ -39,4 +39,4 @@ export interface ChatMessage {
 
 export type CommentaryPerspective = 'catholic' | 'enduring_word' | 'historical' | 'nt_wright' | 'james_dunn' | 'ep_sanders' | 'bart_ehrman' | 'jd_crossan' | 'richard_bauckham' | 'da_carson' | 'walter_brueggemann' | 'john_bright';
 
-export type BibleTranslation = 'web' | 'kjv' | 'bbe' | 'asv' | 'niv';
+export type BibleTranslation = 'web' | 'kjv' | 'bbe' | 'asv' | 'niv' | 'nabre' | 'esv';
