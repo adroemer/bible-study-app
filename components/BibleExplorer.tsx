@@ -131,11 +131,11 @@ export const BibleExplorer: React.FC = () => {
         return null;
     });
     const [selectedChapter, setSelectedChapter] = useState<number | null>(memoryState.lastChapter || null);
-    const [translation, setTranslation] = useState<BibleTranslation>(memoryState.lastTranslation as BibleTranslation || 'web');
+    const [translation, setTranslation] = useState<BibleTranslation>(memoryState.lastTranslation as BibleTranslation || 'niv');
     const [chapterData, setChapterData] = useState<BibleChapter | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl' | '2xl'>('base');
+    const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl'>('2xl');
 
     const [chapterAnalysis, setChapterAnalysis] = useState<{ type: 'summary' | 'commentary', text: string, perspective?: CommentaryPerspective } | null>(() => {
         if (memoryState.chapterAnalysis && 
@@ -336,10 +336,11 @@ export const BibleExplorer: React.FC = () => {
     const getFontSizeClasses = (size: typeof fontSize) => {
         const sizeMap = {
             'sm': 'text-sm',
-            'base': 'text-base', 
+            'base': 'text-base',
             'lg': 'text-lg',
             'xl': 'text-xl',
-            '2xl': 'text-2xl'
+            '2xl': 'text-2xl',
+            '3xl': 'text-3xl'
         };
         return sizeMap[size];
     };
@@ -410,7 +411,7 @@ export const BibleExplorer: React.FC = () => {
                                         </div>
                                         <div className="flex-1">
                                             <label htmlFor="font-size-select" className="sr-only">Font Size</label>
-                                            <select 
+                                            <select
                                                 id="font-size-select"
                                                 value={fontSize}
                                                 onChange={(e) => setFontSize(e.target.value as typeof fontSize)}
@@ -421,6 +422,7 @@ export const BibleExplorer: React.FC = () => {
                                                 <option value="lg">Large</option>
                                                 <option value="xl">Extra Large</option>
                                                 <option value="2xl">2X Large</option>
+                                                <option value="3xl">3X Large</option>
                                             </select>
                                         </div>
                                     </div>

@@ -18,7 +18,7 @@ export const ResponseDisplay: React.FC<ResponseDisplayProps> = ({ response }) =>
             Generated Insight
           </h2>
         </div>
-        <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
+        <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 whitespace-pre-wrap text-2xl">
           {response.text}
         </div>
         
