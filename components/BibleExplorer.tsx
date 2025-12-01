@@ -8,7 +8,6 @@ import { ErrorAlert } from './ErrorAlert';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ArrowsRightLeftIcon, BookOpenIcon, ChatBubbleLeftRightIcon } from './Icons';
 import { ChatInterface } from './ChatInterface';
-import { Contemporaries } from './Contemporaries';
 import { MemoryService, type BibleMemoryState } from '../services/memoryService';
 
 type SortOrder = 'chrono' | 'alpha';
@@ -106,7 +105,16 @@ const ChapterGrid: React.FC<{
 const commentaryPerspectiveLabels: Record<CommentaryPerspective, string> = {
     catholic: 'Catholic Perspective',
     enduring_word: 'Enduring Word Style',
-    historical: 'Historical Theologian'
+    historical: 'Historical Theologian',
+    nt_wright: 'N.T. Wright',
+    james_dunn: 'James Dunn',
+    ep_sanders: 'E.P. Sanders',
+    bart_ehrman: 'Bart Ehrman',
+    jd_crossan: 'J.D. Crossan',
+    richard_bauckham: 'Richard Bauckham',
+    da_carson: 'D.A. Carson',
+    walter_brueggemann: 'Walter Brueggemann',
+    john_bright: 'John Bright'
 };
 
 
@@ -160,8 +168,6 @@ export const BibleExplorer: React.FC = () => {
 
     const [chatInstance, setChatInstance] = useState<{ sendMessage: (message: string) => Promise<string> } |
     null>(null);
-
-    const [isContemporariesOpen, setIsContemporariesOpen] = useState(false);
 
     const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -344,17 +350,12 @@ export const BibleExplorer: React.FC = () => {
             <div className="lg:grid lg:grid-cols-3 lg:gap-8">
                 <aside className="lg:col-span-1 mb-8 lg:mb-0">
                     <div className="sticky top-8">
-                        <header className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                        <header className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Books</h2>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
-                                    <ArrowsRightLeftIcon className="h-4 w-4" />
-                                    {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
-                                </button>
-                                <button onClick={() => setIsContemporariesOpen(true)} className="text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline whitespace-nowrap">
-                                    Contemporaries
-                                </button>
-                            </div>
+                            <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
+                                <ArrowsRightLeftIcon className="h-4 w-4" />
+                                {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
+                            </button>
                         </header>
                         <div className="max-h-[75vh] overflow-y-auto p-1">
                             <BookList books={books} selectedBook={selectedBook} onSelectBook={handleSelectBook} />
@@ -505,7 +506,6 @@ export const BibleExplorer: React.FC = () => {
                 )}
                 </main>
             </div>
-            <Contemporaries isOpen={isContemporariesOpen} onClose={() => setIsContemporariesOpen(false)} />
         </>
     );
 };
