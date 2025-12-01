@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SessionService } from '../services/sessionService';
 
 interface LoginProps {
   onLogin: () => void;
@@ -11,8 +12,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (username === 'TheMAP' && password === 'KrispyKreme') {
+      SessionService.createSession();
       onLogin();
     } else {
       setError('Invalid username or password');

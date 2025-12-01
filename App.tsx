@@ -10,6 +10,7 @@ import { BibleExplorer } from './components/BibleExplorer';
 import { Navbar, type Page } from './components/Navbar';
 import { Login } from './components/Login';
 import { MemoryService, type StudyMemoryState } from './services/memoryService';
+import { SessionService } from './services/sessionService';
 
 const InsightPage: React.FC = () => {
   // Initialize state from memory
@@ -133,14 +134,40 @@ const InsightPage: React.FC = () => {
 
 const App: React.FC = () => {
   const [page, setPage] = useState<Page>('explorer');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => SessionService.isSessionActive());
+  const [sessionExpiring, setSessionExpiring] = useState<boolean>(false);
+
+  // Check session on mount and set up periodic verification
+  useEffect(() => {
+    const checkSession = () => {
+      const isActive = SessionService.isSessionActive();
+      setIsAuthenticated(isActive);
+
+      if (isActive) {
+        const remaining = SessionService.getRemainingTime();
+        // Show warning if less than 15 minutes remaining (900000 ms)
+        setSessionExpiring(remaining < 900000 && remaining > 0);
+      }
+    };
+
+    // Check immediately
+    checkSession();
+
+    // Check every 30 seconds to detect session expiry
+    const sessionCheckInterval = setInterval(checkSession, 30000);
+
+    return () => clearInterval(sessionCheckInterval);
+  }, []);
 
   const handleLogin = () => {
     setIsAuthenticated(true);
+    setSessionExpiring(false);
   };
 
   const handleLogout = () => {
+    SessionService.destroySession();
     setIsAuthenticated(false);
+    setSessionExpiring(false);
   };
 
   if (!isAuthenticated) {
@@ -149,6 +176,12 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center p-4 bg-slate-100 dark:bg-slate-900 font-sans">
+      {sessionExpiring && (
+        <div className="w-full max-w-7xl mx-auto mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm">
+          <p className="font-semibold">Session Expiring Soon</p>
+          <p>Your session will expire in {SessionService.getRemainingTimeFormatted()}. Your Bible reading position and commentary will be automatically saved.</p>
+        </div>
+      )}
       <div className="w-full max-w-7xl mx-auto">
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="p-8 md:p-12">
