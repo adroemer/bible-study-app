@@ -22,7 +22,7 @@ const BOOK_MAPPINGS: Record<string, string[]> = {
     '2kings': ['2kgs', '2ki', '2kings'],
     '1chronicles': ['1ch', '1chr', '1chronicles'],
     '2chronicles': ['2ch', '2chr', '2chronicles'],
-    'ezra': ['ezr', 'ez', 'ezra'],
+    'ezra': ['ezr', 'ezra'],
     'nehemiah': ['ne', 'neh', 'nehemiah'],
     'esther': ['et', 'es', 'est', 'esther'],
     'job': ['job', 'jb'],
@@ -42,7 +42,7 @@ const BOOK_MAPPINGS: Record<string, string[]> = {
     'jonah': ['jo', 'jh', 'jon', 'jonah'],
     'micah': ['mi', 'mc', 'mic', 'micah'],
     'nahum': ['na', 'nah', 'nahum'],
-    'habakkuk': ['hk', 'hb', 'hab', 'habakkuk'],
+    'habakkuk': ['hk', 'hab', 'habakkuk'],
     'zephaniah': ['zp', 'zep', 'zephaniah'],
     'haggai': ['hg', 'hag', 'haggai'],
     'zechariah': ['zc', 'zec', 'zech', 'zechariah'],
@@ -50,7 +50,7 @@ const BOOK_MAPPINGS: Record<string, string[]> = {
     'matthew': ['mt', 'mat', 'matthew'],
     'mark': ['mk', 'mr', 'mrk', 'mark'],
     'luke': ['lk', 'lu', 'luk', 'luke'],
-    'john': ['jn', 'jo', 'joh', 'john'],
+    'john': ['jn', 'joh', 'john'],
     'acts': ['act', 'ac', 'acts'],
     'romans': ['rm', 'ro', 'rom', 'romans'],
     '1corinthians': ['1co', '1cor', '1corinthians'],
@@ -72,7 +72,7 @@ const BOOK_MAPPINGS: Record<string, string[]> = {
     '1john': ['1jo', '1jn', '1john'],
     '2john': ['2jo', '2jn', '2john'],
     '3john': ['3jo', '3jn', '3john'],
-    'jude': ['jd', 'jud', 'jude'],
+    'jude': ['jd', 'jude'],
     'revelation': ['re', 'rv', 'rev', 'revelation']
 };
 
