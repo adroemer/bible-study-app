@@ -1,5 +1,7 @@
 // Memory service for persisting application state across sessions
 
+import type { Bookmark, ScrollPosition } from '../types';
+
 export interface BibleMemoryState {
   lastBook?: string;
   lastChapter?: number;
@@ -24,6 +26,10 @@ export interface BibleMemoryState {
     content: string;
     timestamp: string;
   }>;
+  bookmarks?: Bookmark[];
+  scrollPositions?: ScrollPosition[];
+  darkMode?: boolean;
+  readChapters?: string[]; // Format: "BookName:Chapter"
 }
 
 export interface StudyMemoryState {
@@ -123,7 +129,7 @@ export class MemoryService {
   static addStudyChatMessage(role: 'user' | 'assistant', content: string): void {
     const currentState = this.loadStudyState();
     const chatHistory = currentState.chatHistory || [];
-    
+
     chatHistory.push({
       role,
       content,
@@ -139,5 +145,88 @@ export class MemoryService {
       ...currentState,
       chatHistory
     });
+  }
+
+  // Bookmark methods
+  static getBookmarks(): Bookmark[] {
+    return this.loadBibleState().bookmarks || [];
+  }
+
+  static addBookmark(bookmark: Bookmark): void {
+    const currentState = this.loadBibleState();
+    const bookmarks = currentState.bookmarks || [];
+    bookmarks.push(bookmark);
+    this.saveBibleState({ ...currentState, bookmarks });
+  }
+
+  static removeBookmark(id: string): void {
+    const currentState = this.loadBibleState();
+    const bookmarks = (currentState.bookmarks || []).filter(b => b.id !== id);
+    this.saveBibleState({ ...currentState, bookmarks });
+  }
+
+  static isVerseBookmarked(bookName: string, chapter: number, verse: number): Bookmark | undefined {
+    const bookmarks = this.getBookmarks();
+    return bookmarks.find(b => b.bookName === bookName && b.chapter === chapter && b.verse === verse);
+  }
+
+  // Scroll position methods
+  static saveScrollPosition(bookName: string, chapter: number, scrollTop: number): void {
+    const currentState = this.loadBibleState();
+    const scrollPositions = currentState.scrollPositions || [];
+    const existingIndex = scrollPositions.findIndex(sp => sp.bookName === bookName && sp.chapter === chapter);
+
+    if (existingIndex >= 0) {
+      scrollPositions[existingIndex].scrollTop = scrollTop;
+    } else {
+      scrollPositions.push({ bookName, chapter, scrollTop });
+    }
+
+    // Keep only last 100 positions
+    if (scrollPositions.length > 100) {
+      scrollPositions.splice(0, scrollPositions.length - 100);
+    }
+
+    this.saveBibleState({ ...currentState, scrollPositions });
+  }
+
+  static getScrollPosition(bookName: string, chapter: number): number {
+    const scrollPositions = this.loadBibleState().scrollPositions || [];
+    const position = scrollPositions.find(sp => sp.bookName === bookName && sp.chapter === chapter);
+    return position?.scrollTop || 0;
+  }
+
+  // Dark mode methods
+  static getDarkMode(): boolean {
+    const state = this.loadBibleState();
+    if (state.darkMode !== undefined) return state.darkMode;
+    // Default to system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  static setDarkMode(enabled: boolean): void {
+    const currentState = this.loadBibleState();
+    this.saveBibleState({ ...currentState, darkMode: enabled });
+  }
+
+  // Reading progress methods
+  static markChapterRead(bookName: string, chapter: number): void {
+    const currentState = this.loadBibleState();
+    const readChapters = currentState.readChapters || [];
+    const key = `${bookName}:${chapter}`;
+    if (!readChapters.includes(key)) {
+      readChapters.push(key);
+      this.saveBibleState({ ...currentState, readChapters });
+    }
+  }
+
+  static isChapterRead(bookName: string, chapter: number): boolean {
+    const readChapters = this.loadBibleState().readChapters || [];
+    return readChapters.includes(`${bookName}:${chapter}`);
+  }
+
+  static getReadChaptersCount(bookName: string): number {
+    const readChapters = this.loadBibleState().readChapters || [];
+    return readChapters.filter(rc => rc.startsWith(`${bookName}:`)).length;
   }
 }

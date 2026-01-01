@@ -40,3 +40,19 @@ export interface ChatMessage {
 export type CommentaryPerspective = 'catholic' | 'enduring_word' | 'historical' | 'nt_wright' | 'james_dunn' | 'ep_sanders' | 'bart_ehrman' | 'jd_crossan' | 'richard_bauckham' | 'da_carson' | 'walter_brueggemann' | 'john_bright';
 
 export type BibleTranslation = 'web' | 'kjv' | 'bbe' | 'asv' | 'niv' | 'nabre' | 'esv';
+
+export interface Bookmark {
+    id: string;
+    bookName: string;
+    chapter: number;
+    verse: number;
+    text: string;
+    color: 'yellow' | 'green' | 'blue' | 'pink';
+    createdAt: string;
+}
+
+export interface ScrollPosition {
+    bookName: string;
+    chapter: number;
+    scrollTop: number;
+}
