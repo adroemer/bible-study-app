@@ -189,6 +189,7 @@ export const BibleExplorer: React.FC = () => {
     const [hoveredVerse, setHoveredVerse] = useState<number | null>(null);
     const [readingProgress, setReadingProgress] = useState(0);
     const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const mainContentRef = useRef<HTMLDivElement>(null);
     const chapterTextRef = useRef<HTMLDivElement>(null);
@@ -405,11 +406,12 @@ export const BibleExplorer: React.FC = () => {
         setChatInstance(null);
         setSelectedText(null);
         setSelectionAnalysis(null);
+        setSidebarCollapsed(false); // Expand sidebar when selecting a book
     };
 
     const handleSelectChapter = useCallback(async (chapter: number, version: BibleTranslation) => {
         if (!selectedBook) return;
-        
+
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         setIsLoading(true);
         setError(null);
@@ -419,6 +421,7 @@ export const BibleExplorer: React.FC = () => {
         setSelectedText(null);
         setSelectionAnalysis(null);
         setSelectedChapter(chapter);
+        setSidebarCollapsed(true); // Auto-collapse sidebar when chapter is selected
 
         try {
             const data = await fetchChapter(selectedBook.name, chapter, version);
@@ -634,45 +637,60 @@ export const BibleExplorer: React.FC = () => {
                 </div>
             )}
 
-            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-                <aside className="lg:col-span-1 mb-8 lg:mb-0">
-                    <div className="sticky top-8">
-                        <header className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Books</h2>
-                            <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
-                                <ArrowsRightLeftIcon className="h-4 w-4" />
-                                {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
-                            </button>
-                        </header>
-                        <div className="max-h-[75vh] overflow-y-auto p-1">
-                            <BookList books={books} selectedBook={selectedBook} onSelectBook={handleSelectBook} />
+            <div className={`${sidebarCollapsed ? '' : 'lg:grid lg:grid-cols-3 lg:gap-8'}`}>
+                {/* Collapsible Sidebar */}
+                {!sidebarCollapsed && (
+                    <aside className="lg:col-span-1 mb-8 lg:mb-0">
+                        <div className="sticky top-8">
+                            <header className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Books</h2>
+                                <button onClick={() => setSortOrder(s => s === 'chrono' ? 'alpha' : 'chrono')} className="flex items-center gap-2 text-sm font-semibold text-primary-600 dark:text-primary-400 hover:underline">
+                                    <ArrowsRightLeftIcon className="h-4 w-4" />
+                                    {sortOrder === 'chrono' ? 'Alphabetical' : 'Chronological'}
+                                </button>
+                            </header>
+                            <div className="max-h-[75vh] overflow-y-auto p-1">
+                                <BookList books={books} selectedBook={selectedBook} onSelectBook={handleSelectBook} />
+                            </div>
                         </div>
-                    </div>
-                </aside>
+                    </aside>
+                )}
 
-                <main ref={mainContentRef} className="lg:col-span-2">
+                <main ref={mainContentRef} className={sidebarCollapsed ? 'w-full' : 'lg:col-span-2'}>
                 {/* Breadcrumb Navigation */}
                 {selectedBook && (
-                    <nav className="flex items-center gap-2 text-sm mb-4" aria-label="Breadcrumb">
-                        <button
-                            onClick={() => { setSelectedBook(null); setSelectedChapter(null); setChapterData(null); }}
-                            className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
-                        >
-                            Books
-                        </button>
-                        <span className="text-slate-400">/</span>
-                        <button
-                            onClick={() => { setSelectedChapter(null); setChapterData(null); }}
-                            className={`font-medium ${selectedChapter ? 'text-primary-600 dark:text-primary-400 hover:underline' : 'text-slate-800 dark:text-slate-100'}`}
-                            disabled={!selectedChapter}
-                        >
-                            {selectedBook.name}
-                        </button>
-                        {selectedChapter && (
-                            <>
-                                <span className="text-slate-400">/</span>
-                                <span className="text-slate-800 dark:text-slate-100 font-medium">Chapter {selectedChapter}</span>
-                            </>
+                    <nav className="flex items-center justify-between mb-4" aria-label="Breadcrumb">
+                        <div className="flex items-center gap-2 text-sm">
+                            <button
+                                onClick={() => { setSelectedBook(null); setSelectedChapter(null); setChapterData(null); setSidebarCollapsed(false); }}
+                                className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
+                            >
+                                Books
+                            </button>
+                            <span className="text-slate-400">/</span>
+                            <button
+                                onClick={() => { setSelectedChapter(null); setChapterData(null); setSidebarCollapsed(false); }}
+                                className={`font-medium ${selectedChapter ? 'text-primary-600 dark:text-primary-400 hover:underline' : 'text-slate-800 dark:text-slate-100'}`}
+                                disabled={!selectedChapter}
+                            >
+                                {selectedBook.name}
+                            </button>
+                            {selectedChapter && (
+                                <>
+                                    <span className="text-slate-400">/</span>
+                                    <span className="text-slate-800 dark:text-slate-100 font-medium">Chapter {selectedChapter}</span>
+                                </>
+                            )}
+                        </div>
+                        {/* Toggle sidebar button - only show when viewing chapter */}
+                        {selectedChapter && sidebarCollapsed && (
+                            <button
+                                onClick={() => setSidebarCollapsed(false)}
+                                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                <BookOpenIcon className="h-3.5 w-3.5" />
+                                Show Books
+                            </button>
                         )}
                     </nav>
                 )}
@@ -721,10 +739,10 @@ export const BibleExplorer: React.FC = () => {
                                     style={{ width: `${readingProgress}%` }}
                                 />
                             </div>
-                            {/* Sticky Header */}
-                            <header className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 p-4">
+                            {/* Sticky Header - Compact */}
+                            <header className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-2">
                                 {/* Chapter Navigation Row */}
-                                <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center justify-between mb-2">
                                     <button
                                         onClick={handlePrevChapter}
                                         disabled={!hasPrevChapter}
@@ -769,15 +787,15 @@ export const BibleExplorer: React.FC = () => {
                                         <ChevronRightIcon className="h-4 w-4" />
                                     </button>
                                 </div>
-                                {/* Controls Row */}
-                                <div className="flex flex-col sm:flex-row gap-2">
+                                {/* Controls Row - Compact */}
+                                <div className="flex flex-col sm:flex-row gap-1.5">
                                     <div className="flex-1">
                                         <label htmlFor="translation-select" className="sr-only">Translation</label>
                                         <select
                                             id="translation-select"
                                             value={translation}
                                             onChange={handleTranslationChange}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                                         >
                                             <option value="web">World English Bible</option>
                                             <option value="kjv">King James Version</option>
@@ -794,7 +812,7 @@ export const BibleExplorer: React.FC = () => {
                                             id="parallel-select"
                                             value={parallelTranslation || ''}
                                             onChange={(e) => setParallelTranslation(e.target.value as BibleTranslation || null)}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                                         >
                                             <option value="">No parallel</option>
                                             <option value="web" disabled={translation === 'web'}>World English Bible</option>
@@ -812,7 +830,7 @@ export const BibleExplorer: React.FC = () => {
                                             id="font-size-select"
                                             value={fontSize}
                                             onChange={(e) => setFontSize(e.target.value as typeof fontSize)}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-10 text-base focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                                         >
                                             <option value="sm">Small</option>
                                             <option value="base">Normal</option>
@@ -828,7 +846,7 @@ export const BibleExplorer: React.FC = () => {
                             <div
                                 ref={chapterTextRef}
                                 onScroll={handleScroll}
-                                className={`p-6 max-h-[60vh] overflow-y-auto ${parallelTranslation && parallelChapterData ? 'grid grid-cols-2 gap-4' : ''}`}
+                                className={`p-4 sm:p-6 max-h-[70vh] overflow-y-auto ${parallelTranslation && parallelChapterData ? 'grid grid-cols-2 gap-4' : ''}`}
                             >
                                 {/* Primary Translation */}
                                 <div className={`prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 font-serif leading-relaxed ${getFontSizeClasses(fontSize)}`} onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
@@ -895,26 +913,26 @@ export const BibleExplorer: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                            {/* Bottom Chapter Navigation */}
-                            <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700">
+                            {/* Bottom Chapter Navigation - Compact */}
+                            <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 dark:border-slate-700">
                                 <button
                                     onClick={handlePrevChapter}
                                     disabled={!hasPrevChapter}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                                 >
-                                    <ChevronLeftIcon className="h-4 w-4" />
-                                    Previous Chapter
+                                    <ChevronLeftIcon className="h-3 w-3" />
+                                    <span className="hidden sm:inline">Prev</span>
                                 </button>
-                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                     {selectedChapter} of {totalChapters}
                                 </span>
                                 <button
                                     onClick={handleNextChapter}
                                     disabled={!hasNextChapter}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                                 >
-                                    Next Chapter
-                                    <ChevronRightIcon className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Next</span>
+                                    <ChevronRightIcon className="h-3 w-3" />
                                 </button>
                             </div>
                         </article>
