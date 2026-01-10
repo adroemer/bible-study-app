@@ -190,6 +190,8 @@ export const BibleExplorer: React.FC = () => {
     const [readingProgress, setReadingProgress] = useState(0);
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [settingsCollapsed, setSettingsCollapsed] = useState(false);
+    const [analysisCollapsed, setAnalysisCollapsed] = useState(false);
 
     const mainContentRef = useRef<HTMLDivElement>(null);
     const chapterTextRef = useRef<HTMLDivElement>(null);
@@ -740,26 +742,34 @@ export const BibleExplorer: React.FC = () => {
                                 />
                             </div>
                             {/* Sticky Header - Compact */}
-                            <header className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-2">
+                            <header className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 px-2 sm:px-4 py-1.5">
                                 {/* Chapter Navigation Row */}
-                                <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center justify-between">
                                     <button
                                         onClick={handlePrevChapter}
                                         disabled={!hasPrevChapter}
-                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                                         aria-label="Previous chapter"
                                     >
                                         <ChevronLeftIcon className="h-4 w-4" />
                                         <span className="hidden sm:inline">Prev</span>
                                     </button>
                                     {/* Chapter Picker */}
-                                    <div className="relative">
+                                    <div className="relative flex items-center gap-2">
                                         <button
                                             onClick={() => setShowChapterPicker(!showChapterPicker)}
-                                            className="flex items-center gap-1 text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 hover:text-primary-600 dark:hover:text-primary-400"
+                                            className="flex items-center gap-1 text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100 hover:text-primary-600 dark:hover:text-primary-400"
                                         >
                                             {chapterData.reference}
-                                            <ChevronUpDownIcon className="h-5 w-5" />
+                                            <ChevronUpDownIcon className="h-4 w-4" />
+                                        </button>
+                                        {/* Settings toggle */}
+                                        <button
+                                            onClick={() => setSettingsCollapsed(!settingsCollapsed)}
+                                            className="p-1 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                            title={settingsCollapsed ? 'Show settings' : 'Hide settings'}
+                                        >
+                                            <ChevronDownIcon className={`h-4 w-4 text-slate-500 transition-transform ${settingsCollapsed ? '-rotate-90' : ''}`} />
                                         </button>
                                         {showChapterPicker && (
                                             <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 p-3 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-20 max-h-64 overflow-y-auto">
@@ -780,73 +790,75 @@ export const BibleExplorer: React.FC = () => {
                                     <button
                                         onClick={handleNextChapter}
                                         disabled={!hasNextChapter}
-                                        className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
+                                        className="flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                                         aria-label="Next chapter"
                                     >
                                         <span className="hidden sm:inline">Next</span>
                                         <ChevronRightIcon className="h-4 w-4" />
                                     </button>
                                 </div>
-                                {/* Controls Row - Compact */}
-                                <div className="flex flex-col sm:flex-row gap-1.5">
-                                    <div className="flex-1">
-                                        <label htmlFor="translation-select" className="sr-only">Translation</label>
-                                        <select
-                                            id="translation-select"
-                                            value={translation}
-                                            onChange={handleTranslationChange}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
-                                        >
-                                            <option value="web">World English Bible</option>
-                                            <option value="kjv">King James Version</option>
-                                            <option value="bbe">Bible in Basic English</option>
-                                            <option value="asv">American Standard Version</option>
-                                            <option value="niv">New International Version</option>
-                                            <option value="nabre">New American Bible Revised Edition</option>
-                                            <option value="esv">English Standard Version</option>
-                                        </select>
+                                {/* Controls Row - Collapsible */}
+                                {!settingsCollapsed && (
+                                    <div className="flex flex-col sm:flex-row gap-1.5 mt-2 animate-fade-in">
+                                        <div className="flex-1">
+                                            <label htmlFor="translation-select" className="sr-only">Translation</label>
+                                            <select
+                                                id="translation-select"
+                                                value={translation}
+                                                onChange={handleTranslationChange}
+                                                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
+                                            >
+                                                <option value="web">World English Bible</option>
+                                                <option value="kjv">King James Version</option>
+                                                <option value="bbe">Bible in Basic English</option>
+                                                <option value="asv">American Standard Version</option>
+                                                <option value="niv">New International Version</option>
+                                                <option value="nabre">New American Bible Revised Edition</option>
+                                                <option value="esv">English Standard Version</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label htmlFor="parallel-select" className="sr-only">Parallel Translation</label>
+                                            <select
+                                                id="parallel-select"
+                                                value={parallelTranslation || ''}
+                                                onChange={(e) => setParallelTranslation(e.target.value as BibleTranslation || null)}
+                                                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
+                                            >
+                                                <option value="">No parallel</option>
+                                                <option value="web" disabled={translation === 'web'}>World English Bible</option>
+                                                <option value="kjv" disabled={translation === 'kjv'}>King James Version</option>
+                                                <option value="bbe" disabled={translation === 'bbe'}>Bible in Basic English</option>
+                                                <option value="asv" disabled={translation === 'asv'}>American Standard Version</option>
+                                                <option value="niv" disabled={translation === 'niv'}>New International Version</option>
+                                                <option value="nabre" disabled={translation === 'nabre'}>New American Bible Revised Edition</option>
+                                                <option value="esv" disabled={translation === 'esv'}>English Standard Version</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label htmlFor="font-size-select" className="sr-only">Font Size</label>
+                                            <select
+                                                id="font-size-select"
+                                                value={fontSize}
+                                                onChange={(e) => setFontSize(e.target.value as typeof fontSize)}
+                                                className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
+                                            >
+                                                <option value="sm">Small</option>
+                                                <option value="base">Normal</option>
+                                                <option value="lg">Large</option>
+                                                <option value="xl">Extra Large</option>
+                                                <option value="2xl">2X Large</option>
+                                                <option value="3xl">3X Large</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <label htmlFor="parallel-select" className="sr-only">Parallel Translation</label>
-                                        <select
-                                            id="parallel-select"
-                                            value={parallelTranslation || ''}
-                                            onChange={(e) => setParallelTranslation(e.target.value as BibleTranslation || null)}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
-                                        >
-                                            <option value="">No parallel</option>
-                                            <option value="web" disabled={translation === 'web'}>World English Bible</option>
-                                            <option value="kjv" disabled={translation === 'kjv'}>King James Version</option>
-                                            <option value="bbe" disabled={translation === 'bbe'}>Bible in Basic English</option>
-                                            <option value="asv" disabled={translation === 'asv'}>American Standard Version</option>
-                                            <option value="niv" disabled={translation === 'niv'}>New International Version</option>
-                                            <option value="nabre" disabled={translation === 'nabre'}>New American Bible Revised Edition</option>
-                                            <option value="esv" disabled={translation === 'esv'}>English Standard Version</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex-1">
-                                        <label htmlFor="font-size-select" className="sr-only">Font Size</label>
-                                        <select
-                                            id="font-size-select"
-                                            value={fontSize}
-                                            onChange={(e) => setFontSize(e.target.value as typeof fontSize)}
-                                            className="block w-full rounded-md border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-1.5 pl-2 pr-8 text-xs focus:border-primary-500 focus:outline-none focus:ring-primary-500"
-                                        >
-                                            <option value="sm">Small</option>
-                                            <option value="base">Normal</option>
-                                            <option value="lg">Large</option>
-                                            <option value="xl">Extra Large</option>
-                                            <option value="2xl">2X Large</option>
-                                            <option value="3xl">3X Large</option>
-                                        </select>
-                                    </div>
-                                </div>
+                                )}
                             </header>
-                            {/* Chapter Text */}
+                            {/* Chapter Text - Wider on mobile */}
                             <div
                                 ref={chapterTextRef}
                                 onScroll={handleScroll}
-                                className={`p-4 sm:p-6 max-h-[70vh] overflow-y-auto ${parallelTranslation && parallelChapterData ? 'grid grid-cols-2 gap-4' : ''}`}
+                                className={`px-2 py-3 sm:p-6 max-h-[75vh] overflow-y-auto ${parallelTranslation && parallelChapterData ? 'grid grid-cols-2 gap-4' : ''}`}
                             >
                                 {/* Primary Translation */}
                                 <div className={`prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 font-serif leading-relaxed ${getFontSizeClasses(fontSize)}`} onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
@@ -970,9 +982,17 @@ export const BibleExplorer: React.FC = () => {
                             </section>
                         )}
                         
-                        <section className="mt-8">
-                             <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Analysis for Chapter</h3>
-                             <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <section className="mt-6">
+                            {/* Collapsible Analysis Header */}
+                            <button
+                                onClick={() => setAnalysisCollapsed(!analysisCollapsed)}
+                                className="w-full flex items-center justify-between p-3 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">Analysis for Chapter</h3>
+                                <ChevronDownIcon className={`h-5 w-5 text-slate-500 transition-transform ${analysisCollapsed ? '-rotate-90' : ''}`} />
+                            </button>
+                            {!analysisCollapsed && (
+                             <div className="bg-slate-50 dark:bg-slate-900/50 p-4 sm:p-6 rounded-b-xl border border-t-0 border-slate-200 dark:border-slate-700 animate-fade-in">
                                 {/* Primary Actions */}
                                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                                     <button onClick={handleSummarize} disabled={isChapterAnalysisLoading} className="w-full px-4 py-2.5 border border-transparent text-base font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 flex items-center justify-center gap-2">
@@ -1025,6 +1045,7 @@ export const BibleExplorer: React.FC = () => {
                                 )}
                                 {chatInstance && !isChapterAnalysisLoading && <ChatInterface chatInstance={chatInstance} />}
                              </div>
+                            )}
                         </section>
                     </div>
                 )}
