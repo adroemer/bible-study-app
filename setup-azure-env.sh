@@ -22,13 +22,13 @@ echo ""
 echo "⚠️  IMPORTANT: You need to provide the actual values for these environment variables:"
 echo "   - AZURE_OPENAI_API_KEY (from your Azure OpenAI service)"
 echo "   - AZURE_OPENAI_ENDPOINT (e.g., https://biblestudyopenai.openai.azure.com/)"
-echo "   - DEPLOYMENT_NAME (e.g., gpt-4o-mini)"
+echo "   - DEPLOYMENT_NAME (e.g., gpt-4.1-mini)"
 echo ""
 
 read -p "Enter your AZURE_OPENAI_API_KEY: " AZURE_OPENAI_API_KEY
 read -p "Enter your AZURE_OPENAI_ENDPOINT: " AZURE_OPENAI_ENDPOINT
-read -p "Enter your DEPLOYMENT_NAME [gpt-4o-mini]: " DEPLOYMENT_NAME
-DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-gpt-4o-mini}
+read -p "Enter your DEPLOYMENT_NAME [gpt-4.1-mini]: " DEPLOYMENT_NAME
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-gpt-4.1-mini}
 
 echo ""
 echo "Configuring environment variables for Azure Functions..."
