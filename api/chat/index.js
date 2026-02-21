@@ -31,7 +31,7 @@ module.exports = async function (context, req) {
         // Get environment variables from Function App Configuration
         const apiKey = process.env.AZURE_OPENAI_API_KEY;
         const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-        const deployment = process.env.DEPLOYMENT_NAME || 'gpt-4o-mini';
+        const deployment = process.env.DEPLOYMENT_NAME || 'gpt-4.1-mini';
         // BEST PRACTICE: Make the API version configurable as well
         const apiVersion = process.env.AZURE_OPENAI_API_VERSION || '2025-01-01-preview';
 
@@ -104,7 +104,7 @@ module.exports = async function (context, req) {
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: prompt }
             ],
-            max_tokens: maxTokens,
+            max_completion_tokens: maxTokens,
             temperature: temperature,
             top_p: 0.95,
             frequency_penalty: 0,
