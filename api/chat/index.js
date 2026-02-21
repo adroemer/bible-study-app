@@ -113,13 +113,23 @@ module.exports = async function (context, req) {
             stream: false
         });
 
-        const responseText = completion.choices[0]?.message?.content || "No response generated.";
+        // Debug: log the full completion structure
+        context.log('Completion choices[0]:', JSON.stringify(completion.choices[0], null, 2));
+
+        const message = completion.choices[0]?.message;
+        const responseText = message?.content || message?.refusal || "No response generated.";
 
         context.res.status = 200;
         context.res.body = {
             success: true,
             response: responseText,
-            usage: completion.usage
+            usage: completion.usage,
+            debug: {
+                finish_reason: completion.choices[0]?.finish_reason,
+                has_content: !!message?.content,
+                content_type: typeof message?.content,
+                message_keys: message ? Object.keys(message) : []
+            }
         };
 
     } catch (error) {
